@@ -19,7 +19,7 @@ function sign(_msg, _privKey, _splitSig = false) {
     const s = '0x' + signature.slice(64, 128);
     const v = parseFloat('0x' + signature.slice(128, 130)) === 0 ? 27 : 28;
     return {
-      originalMsg: _msg.toString(),
+      originalMsg: _msg,
       hashedMsg: '0x' + hashedMsg.toString('hex'),
       signature: {
         v: v,
@@ -30,7 +30,7 @@ function sign(_msg, _privKey, _splitSig = false) {
   }
 
   return {
-    originalMsg: _msg.toString(),
+    originalMsg: _msg,
     hashedMsg: '0x' + hashedMsg.toString('hex'),
     signature: '0x' + signature
   }
