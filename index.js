@@ -39,6 +39,3 @@ function sign(_msg, _privKey, _splitSig = false) {
 
 
 module.exports = sign;
-
-
-sign('hello', 'cea952fcb6463ed79eadbc9378050746784d71ba67df33f0d2dd3f234244ff51')
