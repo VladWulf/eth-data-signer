@@ -1,41 +1,45 @@
+/*
+  Copyright 2018, Vladimir Agaev, All rights reserved.
+*/
+
 const keccak = require('keccak');
 const secp256k1 = require('secp256k1');
 
 /**
   * Signs a message with a private key in an ethereum compatible way
   * @param {string} _msg - message to sign
-  * @param {string} _privKey - ethereum private key, should be without the 0x
-  * @param {bool} [_splitSig = false] - whether the signature should be split in v r s or not
+  * @param {string} _privateKey - ethereum private key
+  * @param {bool} [_splitSignature = false] - whether the signature should be split in v r s or not
 */
-function sign(_msg, _privKey, _splitSig = false) {
-  if(_privKey.length < 64) throw new Error('Private Key too small')
-  if(_privKey.length === 66) _privKey = _privKey.substring(2);
-  const privKey = Buffer.from(_privKey, 'hex');
-  const hashedMsg = keccak('keccak256').update("\x19Ethereum Signed Message:\n32" + _msg).digest();
-  const signature = secp256k1.sign(hashedMsg, privKey).signature.toString('hex');
+function sign(_data, _privateKey, _splitSignature = false) {
+  if(_privateKey.length < 64) throw new Error('Private Key too small');
+  if(_privateKey.substring(0,2) === '0x') _privateKey = _privateKey.substring(2);
+  _privateKey = Buffer.from(_privateKey, 'hex');
 
-  if(_splitSig) {
+  const hashedData = keccak('keccak256').update("\x19Ethereum Signed Message:\n32" + _data).digest();
+  let signature = secp256k1.sign(hashedData, _privateKey);
+  const recovery = signature.recovery;
+  signature = signature.signature.toString('hex');
+  signature += recovery === 0 ? '1b': '1c';
+  if(_splitSignature) {
     const r = '0x' + signature.slice(0, 64);
     const s = '0x' + signature.slice(64, 128);
-    const v = parseFloat('0x' + signature.slice(128, 130)) === 0 ? 27 : 28;
+    const v = parseInt(signature.slice(128, 130), 16);
     return {
-      originalMsg: _msg,
-      hashedMsg: '0x' + hashedMsg.toString('hex'),
+      originalData: _data,
+      hashedData: '0x' + hashedData.toString('hex'),
       signature: {
-        v: v,
         r: r,
-        s: s
+        s: s,
+        v: v
       }
     }
   }
-
   return {
-    originalMsg: _msg,
-    hashedMsg: '0x' + hashedMsg.toString('hex'),
+    originalData: _data,
+    hashedData: '0x' + hashedData.toString('hex'),
     signature: '0x' + signature
   }
 }
-
-
 
 module.exports = sign;
